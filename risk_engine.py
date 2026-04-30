@@ -70,20 +70,18 @@ def score_login(user_id, ip_address, user_agent):
         score += 10
         factors.append(f"Elevated frequency — {recent} logins in last 10 minutes")
 
-    # 5. Recent blocked attempts in last 24 hours
-    blocked = db.execute(
-        """SELECT COUNT(*) as c FROM login_events
-           WHERE user_id = ? AND outcome = 'blocked'
-           AND timestamp >= datetime('now', '-24 hours')""",
-        (user_id,)
-    ).fetchone()["c"]
+    # 5. Recent failed challenge attempts (live counter, resets on success)
+    user_row = db.execute(
+        "SELECT failed_attempts FROM users WHERE id = ?", (user_id,)
+    ).fetchone()
+    pending_failures = user_row["failed_attempts"] if user_row else 0
 
-    if blocked >= 3:
+    if pending_failures >= 3:
         score += 15
-        factors.append(f"Multiple blocked attempts today: {blocked}")
-    elif blocked >= 1:
+        factors.append(f"Multiple recent failed challenge attempts: {pending_failures}")
+    elif pending_failures >= 1:
         score += 8
-        factors.append(f"Blocked attempt in last 24 hours: {blocked}")
+        factors.append(f"Recent failed challenge attempt(s): {pending_failures}")
 
     # Cap at 100
     score = min(score, 100)

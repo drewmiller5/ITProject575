@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-from database import init_db, create_user, get_user, save_credential, get_credential, get_credentials_by_user, log_login_event, get_login_history, save_security_questions, get_security_questions, verify_security_answers
+from database import init_db, create_user, get_user, save_credential, get_credential, get_credentials_by_user, log_login_event, get_login_history, save_security_questions, get_security_questions, verify_security_answers, lock_user, is_user_locked, increment_failed_attempts, reset_failed_attempts, LOCK_DURATION_HOURS, update_security_questions, delete_all_security_questions, normalize_answer, save_recovery, get_recovery, verify_recovery, get_db
 from risk_engine import score_login
 import random
 
@@ -16,12 +16,23 @@ def register():
     data = request.get_json()
     username = data.get("username", "").strip()
     questions_and_answers = data.get("security_questions", [])
+    recovery_type = data.get("recovery_type", "pin")
+    recovery_value = data.get("recovery_value", "").strip()
 
     if not username:
         return jsonify({"error": "Username is required"}), 400
 
     if len(questions_and_answers) != 3:
         return jsonify({"error": "You must set exactly 3 security questions"}), 400
+
+    if not recovery_value:
+        return jsonify({"error": "A recovery PIN or passphrase is required"}), 400
+
+    if recovery_type == "pin" and (not recovery_value.isdigit() or len(recovery_value) < 4):
+        return jsonify({"error": "PIN must be at least 4 digits"}), 400
+
+    if recovery_type == "phrase" and len(recovery_value) < 5:
+        return jsonify({"error": "Passphrase must be at least 5 characters"}), 400
 
     success = create_user(username)
     if not success:
@@ -33,6 +44,8 @@ def register():
 
     pairs = [(q["question"], q["answer"]) for q in questions_and_answers]
     save_security_questions(user["id"], pairs)
+
+    save_recovery(user["id"], recovery_type, recovery_value)
 
     return jsonify({
         "message": f"User {username} registered successfully",
@@ -52,6 +65,11 @@ def login():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
+    if is_user_locked(user["id"]):
+        return jsonify({
+            "error": f"Account locked due to too many failed attempts. Please try again in {LOCK_DURATION_HOURS} hours or use account recovery."
+        }), 403
+
     cred = get_credential(credential_id)
     if not cred or cred["user_id"] != user["id"]:
         return jsonify({"error": "Invalid credential"}), 401
@@ -70,7 +88,6 @@ def login():
             "risk": risk
         }), 200
 
-    # Randomize question order for challenged logins
     shuffled = list(all_questions)
     random.shuffle(shuffled)
 
@@ -124,12 +141,10 @@ def challenge():
     all_questions = get_security_questions(user["id"])
     stored = {row["question"]: row["answer"] for row in all_questions}
 
-    # Check each answer
     passed_answers = []
     failed_answers = []
     for a in answers:
         expected = stored.get(a["question"], "")
-        from database import normalize_answer
         if normalize_answer(a["answer"]) == normalize_answer(expected):
             passed_answers.append(a)
         else:
@@ -138,36 +153,36 @@ def challenge():
     passed = len(passed_answers)
     total = len(answers)
 
-    # 0 for all → immediately blocked
     if passed == 0:
+        now_locked = increment_failed_attempts(user["id"])
         log_login_event(user["id"], ip, ua, 100, "blocked")
+        if now_locked:
+            return jsonify({
+                "success": False,
+                "blocked": True,
+                "message": f"Access denied — failed all questions. Account locked for {LOCK_DURATION_HOURS} hours."
+            }), 401
         return jsonify({
             "success": False,
             "blocked": True,
             "message": "Access denied — failed all questions."
         }), 401
 
-    # All correct → let them in
     if passed == total:
         log_login_event(user["id"], ip, ua, 0, "allowed")
+        reset_failed_attempts(user["id"])
         return jsonify({
             "success": True,
             "message": f"Welcome {username}"
         }), 200
 
-    # Partial correct — check escalation level
-    # Build locked answers (only the ones they got correct)
     locked = [{"question": a["question"], "answer": a["answer"], "locked": True} for a in passed_answers]
-
-    # Get questions not yet asked
     asked_questions = {a["question"] for a in answers}
     remaining = [q for q in all_questions if q["question"] not in asked_questions]
 
     if escalation_level < 3 and remaining:
-        # Escalate — pick a random unused question
         next_question = random.choice(remaining)
         next_level = escalation_level + 1
-
         return jsonify({
             "success": False,
             "escalate": True,
@@ -177,7 +192,6 @@ def challenge():
             "new_question": {"question": next_question["question"], "locked": False}
         }), 200
 
-    # At level 3 and failed exactly one — one retry
     if escalation_level == 3 and len(failed_answers) == 1:
         return jsonify({
             "success": False,
@@ -188,13 +202,211 @@ def challenge():
             "retry_question": {"question": failed_answers[0]["question"], "locked": False}
         }), 200
 
-    # Failed too many — blocked
+    now_locked = increment_failed_attempts(user["id"])
     log_login_event(user["id"], ip, ua, 100, "blocked")
+    if now_locked:
+        return jsonify({
+            "success": False,
+            "blocked": True,
+            "message": f"Access denied — too many incorrect answers. Account locked for {LOCK_DURATION_HOURS} hours."
+        }), 401
     return jsonify({
         "success": False,
         "blocked": True,
         "message": "Access denied — too many incorrect answers."
     }), 401
+
+@app.route("/questions/get", methods=["POST"])
+def get_questions():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    credential_id = data.get("credential_id", "").strip()
+
+    if not username or not credential_id:
+        return jsonify({"error": "Username and credential_id are required"}), 400
+
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if is_user_locked(user["id"]):
+        return jsonify({"error": f"Account locked for {LOCK_DURATION_HOURS} hours."}), 403
+
+    cred = get_credential(credential_id)
+    if not cred or cred["user_id"] != user["id"]:
+        return jsonify({"error": "Invalid credential"}), 401
+
+    questions = get_security_questions(user["id"])
+    return jsonify({
+        "questions": [{"question": q["question"]} for q in questions]
+    }), 200
+
+@app.route("/questions/change", methods=["POST"])
+def change_questions():
+    data = request.get_json()
+    username        = data.get("username", "").strip()
+    credential_id   = data.get("credential_id", "").strip()
+    current_answers = data.get("current_answers", [])
+    new_questions   = data.get("new_questions", [])
+
+    if not username or not credential_id:
+        return jsonify({"error": "username and credential_id are required"}), 400
+
+    if not current_answers:
+        return jsonify({"error": "current_answers are required to verify your identity"}), 400
+
+    if not new_questions:
+        return jsonify({"error": "new_questions must contain at least one entry"}), 400
+
+    if len(new_questions) > 3:
+        return jsonify({"error": "You can only set up to 3 security questions"}), 400
+
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if is_user_locked(user["id"]):
+        return jsonify({
+            "error": f"Account locked. Please try again in {LOCK_DURATION_HOURS} hours or contact support."
+        }), 403
+
+    cred = get_credential(credential_id)
+    if not cred or cred["user_id"] != user["id"]:
+        return jsonify({"error": "Invalid credential"}), 401
+
+    stored_rows = get_security_questions(user["id"])
+    stored = {row["question"]: row["answer"] for row in stored_rows}
+
+    failed = []
+    for a in current_answers:
+        expected = stored.get(a["question"], "")
+        if normalize_answer(a["answer"]) != normalize_answer(expected):
+            failed.append(a["question"])
+
+    if failed:
+        now_locked = increment_failed_attempts(user["id"])
+        if now_locked:
+            return jsonify({
+                "error": f"Too many failed attempts. Account locked for {LOCK_DURATION_HOURS} hours.",
+                "locked": True
+            }), 403
+        return jsonify({
+            "error": "One or more current answers were incorrect.",
+            "failed_questions": failed
+        }), 401
+
+    reset_failed_attempts(user["id"])
+    update_security_questions(user["id"], new_questions)
+
+    changed = [q["question"] for q in new_questions]
+    return jsonify({
+        "message": "Security question(s) updated successfully.",
+        "updated": changed
+    }), 200
+
+@app.route("/questions/recover", methods=["POST"])
+def recover_questions():
+    data = request.get_json()
+    username      = data.get("username", "").strip()
+    credential_id = data.get("credential_id", "").strip()
+    new_questions = data.get("new_questions", [])
+
+    if not username or not credential_id:
+        return jsonify({"error": "username and credential_id are required"}), 400
+
+    if len(new_questions) != 3:
+        return jsonify({"error": "You must provide exactly 3 new security questions for recovery"}), 400
+
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    cred = get_credential(credential_id)
+    if not cred or cred["user_id"] != user["id"]:
+        return jsonify({"error": "Invalid credential"}), 401
+
+    delete_all_security_questions(user["id"])
+    pairs = [(q["question"], q["answer"]) for q in new_questions]
+    save_security_questions(user["id"], pairs)
+
+    if is_user_locked(user["id"]):
+        with get_db() as db:
+            db.execute(
+                "UPDATE users SET locked = 0, locked_until = NULL, failed_attempts = 0 WHERE id = ?",
+                (user["id"],)
+            )
+            db.commit()
+
+    return jsonify({
+        "message": "Security questions reset successfully. You can now log in normally."
+    }), 200
+
+@app.route("/recovery/verify", methods=["POST"])
+def recovery_verify():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    credential_id = data.get("credential_id", "").strip()
+    recovery_value = data.get("recovery_value", "").strip()
+
+    if not username or not credential_id or not recovery_value:
+        return jsonify({"error": "Username, credential_id and recovery value are required"}), 400
+
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    cred = get_credential(credential_id)
+    if not cred or cred["user_id"] != user["id"]:
+        return jsonify({"error": "Invalid credential"}), 401
+
+    if not verify_recovery(user["id"], recovery_value):
+        return jsonify({"error": "Incorrect recovery PIN or passphrase"}), 401
+
+    with get_db() as db:
+        db.execute(
+            "UPDATE users SET locked = 0, locked_until = NULL, failed_attempts = 0 WHERE id = ?",
+            (user["id"],)
+        )
+        db.commit()
+
+    delete_all_security_questions(user["id"])
+
+    return jsonify({
+        "success": True,
+        "message": "Account unlocked. Please set new security questions to continue."
+    }), 200
+
+@app.route("/recovery/change", methods=["POST"])
+def recovery_change():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    credential_id = data.get("credential_id", "").strip()
+    current_value = data.get("current_value", "").strip()
+    new_value = data.get("new_value", "").strip()
+    new_type = data.get("new_type", "").strip()
+
+    if not all([username, credential_id, current_value, new_value, new_type]):
+        return jsonify({"error": "All fields are required"}), 400
+
+    if new_type == "pin" and (not new_value.isdigit() or len(new_value) < 4):
+        return jsonify({"error": "PIN must be at least 4 digits"}), 400
+
+    if new_type == "phrase" and len(new_value) < 5:
+        return jsonify({"error": "Phrase must be at least 5 characters"}), 400
+
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    cred = get_credential(credential_id)
+    if not cred or cred["user_id"] != user["id"]:
+        return jsonify({"error": "Invalid credential"}), 401
+
+    if not verify_recovery(user["id"], current_value):
+        return jsonify({"error": "Current recovery value is incorrect"}), 401
+
+    save_recovery(user["id"], new_type, new_value)
+    return jsonify({"message": "Recovery method updated successfully"}), 200
 
 @app.route("/history/<username>", methods=["GET"])
 def history(username):

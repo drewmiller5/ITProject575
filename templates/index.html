@@ -111,7 +111,7 @@
   .field { margin-bottom: 18px; }
   label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); margin-bottom: 7px; }
 
-  input[type=text] {
+  input[type=text], input[type=password] {
     width: 100%;
     background: rgba(0,0,0,0.5);
     border: 1px solid var(--border);
@@ -122,8 +122,8 @@
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  input[type=text]:focus { border-color: var(--glow2); box-shadow: 0 0 12px rgba(0,136,255,0.15); }
-  input[type=text]:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--dim); }
+  input[type=text]:focus, input[type=password]:focus { border-color: var(--glow2); box-shadow: 0 0 12px rgba(0,136,255,0.15); }
+  input[type=text]:disabled, input[type=password]:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--dim); }
 
   select {
     width: 100%;
@@ -166,6 +166,28 @@
   .answer-status.ok  { color: var(--ok); }
   .answer-status.err { color: var(--danger); }
 
+  .recovery-type-select {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .type-btn {
+    flex: 1;
+    padding: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--dim);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .type-btn.active { border-color: var(--glow2); color: var(--glow2); background: rgba(0,136,255,0.05); }
+  .type-btn:hover:not(.active) { border-color: var(--text); color: var(--text); }
+
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; border: 1px solid; transition: all 0.2s; background: none; }
   .btn-primary { color: #000; background: var(--glow); border-color: var(--glow); font-weight: 700; }
   .btn-primary:hover { background: #33fff0; box-shadow: 0 0 24px rgba(0,255,224,0.3); }
@@ -205,6 +227,24 @@
   #challenge-alert.err { color: var(--danger); border-color: rgba(255,51,85,0.3); background: rgba(255,51,85,0.05); display:block; }
   #challenge-alert.ok  { color: var(--ok);     border-color: rgba(0,255,224,0.3); background: rgba(0,255,224,0.05); display:block; }
 
+  #recovery-card { display: none; animation: fadeUp 0.4s ease both; }
+  #recovery-alert { margin-top: 16px; padding: 11px 14px; font-family: var(--mono); font-size: 12px; display: none; border: 1px solid; }
+  #recovery-alert.err { color: var(--danger); border-color: rgba(255,51,85,0.3); background: rgba(255,51,85,0.05); display:block; }
+  #recovery-alert.ok  { color: var(--ok);     border-color: rgba(0,255,224,0.3); background: rgba(0,255,224,0.05); display:block; }
+
+  #reset-questions-section { display: none; margin-top: 24px; }
+
+  #change-card { display: none; animation: fadeUp 0.4s ease both; }
+  #change-alert { margin-top: 16px; padding: 11px 14px; font-family: var(--mono); font-size: 12px; display: none; border: 1px solid; }
+  #change-alert.err { color: var(--danger); border-color: rgba(255,51,85,0.3); background: rgba(255,51,85,0.05); display:block; }
+  #change-alert.ok  { color: var(--ok);     border-color: rgba(0,255,224,0.3); background: rgba(0,255,224,0.05); display:block; }
+  #new-questions-section { display: none; margin-top: 24px; }
+
+  #change-recovery-card { display: none; animation: fadeUp 0.4s ease both; }
+  #change-recovery-alert { margin-top: 16px; padding: 11px 14px; font-family: var(--mono); font-size: 12px; display: none; border: 1px solid; }
+  #change-recovery-alert.err { color: var(--danger); border-color: rgba(255,51,85,0.3); background: rgba(255,51,85,0.05); display:block; }
+  #change-recovery-alert.ok  { color: var(--ok);     border-color: rgba(0,255,224,0.3); background: rgba(0,255,224,0.05); display:block; }
+
   #dashboard-card { display: none; animation: fadeUp 0.4s ease both; }
   .welcome { font-family: var(--sans); font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 4px; }
   .welcome span { color: var(--glow); }
@@ -216,9 +256,9 @@
   th { text-align: left; color: var(--dim); padding: 6px 10px; border-bottom: 1px solid var(--border); letter-spacing: 0.1em; text-transform: uppercase; }
   td { padding: 8px 10px; border-bottom: 1px solid rgba(15,34,53,0.6); color: var(--text); }
   .badge { display: inline-block; padding: 2px 8px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
-  .badge.allowed      { color: var(--ok);     background: rgba(0,255,224,0.08); }
-  .badge.challenged   { color: var(--warn);   background: rgba(255,170,0,0.08); }
-  .badge.blocked      { color: var(--danger); background: rgba(255,51,85,0.08); }
+  .badge.allowed    { color: var(--ok);     background: rgba(0,255,224,0.08); }
+  .badge.challenged { color: var(--warn);   background: rgba(255,170,0,0.08); }
+  .badge.blocked    { color: var(--danger); background: rgba(255,51,85,0.08); }
 
   footer { margin-top: 40px; font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 0.12em; text-align: center; }
 </style>
@@ -228,7 +268,7 @@
 <header>
   <div class="logo"><span class="pulse"></span>ADAPTIVE<span>/</span>AUTH</div>
   <div class="header-right">
-    IT 575 — Advanced Computer Security<br>
+    IT 575 — Information Management Security<br>
     Marymount University · 2026
   </div>
 </header>
@@ -242,6 +282,7 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('login')">Sign In</button>
     <button class="tab" onclick="switchTab('register')">Register</button>
+    <button class="tab" onclick="switchTab('recover')">Account Recovery</button>
   </div>
 
   <!-- LOGIN -->
@@ -331,7 +372,39 @@
       </div>
     </div>
 
+    <div class="card-label" style="margin-bottom:16px;margin-top:24px">Recovery Method</div>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:16px">
+      Set a PIN or passphrase. This is only used if you get locked out and forget your security question answers.
+    </p>
+
+    <div class="recovery-type-select">
+      <button class="type-btn active" id="reg-pin-btn" onclick="setRegRecoveryType('pin')">PIN (4+ digits)</button>
+      <button class="type-btn" id="reg-phrase-btn" onclick="setRegRecoveryType('phrase')">Passphrase (5+ letters)</button>
+    </div>
+
+    <div class="field">
+      <label id="reg-recovery-label">Recovery PIN</label>
+      <input type="password" id="reg-recovery-value" placeholder="enter at least 4 digits">
+    </div>
+
     <button class="btn btn-primary" onclick="doRegister()" style="margin-top:8px">&#9632; Register Passkey</button>
+  </div>
+
+  <!-- ACCOUNT RECOVERY -->
+  <div class="tab-pane" id="pane-recover">
+    <p style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:20px">
+      Use this if your account is locked or you have forgotten your security question answers.
+      Enter your username and recovery PIN or passphrase to unlock your account.
+    </p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="recover-username" placeholder="enter your username">
+    </div>
+    <div class="field">
+      <label>Recovery PIN or Passphrase</label>
+      <input type="password" id="recover-value" placeholder="enter your recovery PIN or passphrase">
+    </div>
+    <button class="btn btn-warn" onclick="doRecovery()">&#9632; Recover Account</button>
   </div>
 
   <div id="alert"></div>
@@ -367,6 +440,199 @@
   <div id="challenge-alert"></div>
 </div>
 
+<!-- RECOVERY RESET QUESTIONS CARD -->
+<div class="card" id="recovery-card">
+  <div class="card-label">Account Recovery — Reset Security Questions</div>
+  <p style="font-family:var(--mono);font-size:12px;color:var(--warn);margin-bottom:24px">
+    ⚠ Account unlocked. You must set new security questions before you can log in.
+  </p>
+  <div class="question-block" data-num="NQ1">
+    <div class="field">
+      <label>New Question 1</label>
+      <select id="rq1">
+        <option value="">-- select a question --</option>
+        <option>What was the name of your childhood best friend?</option>
+        <option>What was the first concert you ever attended?</option>
+        <option>What was the nickname of your childhood home or bedroom?</option>
+        <option>What was the name of your first pet?</option>
+        <option>What was the first video game you ever played?</option>
+        <option>How many floors did your house have growing up?</option>
+        <option>What was the name of your imaginary friend as a child?</option>
+        <option>What was the make and model of the first car you ever drove?</option>
+        <option>What is the middle name of your oldest sibling?</option>
+        <option>What was the name of your favorite teacher in elementary school?</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Answer 1</label>
+      <input type="text" id="ra1" placeholder="your answer">
+    </div>
+  </div>
+  <div class="question-block" data-num="NQ2">
+    <div class="field">
+      <label>New Question 2</label>
+      <select id="rq2">
+        <option value="">-- select a question --</option>
+        <option>What was the name of your childhood best friend?</option>
+        <option>What was the first concert you ever attended?</option>
+        <option>What was the nickname of your childhood home or bedroom?</option>
+        <option>What was the name of your first pet?</option>
+        <option>What was the first video game you ever played?</option>
+        <option>How many floors did your house have growing up?</option>
+        <option>What was the name of your imaginary friend as a child?</option>
+        <option>What was the make and model of the first car you ever drove?</option>
+        <option>What is the middle name of your oldest sibling?</option>
+        <option>What was the name of your favorite teacher in elementary school?</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Answer 2</label>
+      <input type="text" id="ra2" placeholder="your answer">
+    </div>
+  </div>
+  <div class="question-block" data-num="NQ3">
+    <div class="field">
+      <label>New Question 3</label>
+      <select id="rq3">
+        <option value="">-- select a question --</option>
+        <option>What was the name of your childhood best friend?</option>
+        <option>What was the first concert you ever attended?</option>
+        <option>What was the nickname of your childhood home or bedroom?</option>
+        <option>What was the name of your first pet?</option>
+        <option>What was the first video game you ever played?</option>
+        <option>How many floors did your house have growing up?</option>
+        <option>What was the name of your imaginary friend as a child?</option>
+        <option>What was the make and model of the first car you ever drove?</option>
+        <option>What is the middle name of your oldest sibling?</option>
+        <option>What was the name of your favorite teacher in elementary school?</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Answer 3</label>
+      <input type="text" id="ra3" placeholder="your answer">
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="submitRecoveryQuestions()" style="margin-top:8px">
+    &#9632; Save Questions and Continue
+  </button>
+  <div id="recovery-alert"></div>
+</div>
+
+<!-- CHANGE QUESTIONS CARD -->
+<div class="card" id="change-card">
+  <div class="card-label">Change Security Questions</div>
+  <p style="font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:24px">
+    Answer your current security questions to verify your identity. If correct, you can set new questions below.
+  </p>
+  <div id="verify-stage">
+    <div class="card-label" style="margin-bottom:16px">Step 1 — Verify Your Identity</div>
+    <div id="current-questions-list"></div>
+    <button class="btn btn-warn" onclick="verifyCurrentAnswers()" style="margin-top:8px">
+      &#9632; Verify Answers
+    </button>
+  </div>
+  <div id="new-questions-section">
+    <div class="card-label" style="margin-bottom:16px;margin-top:24px">Step 2 — Set New Questions</div>
+    <div class="question-block" data-num="NQ1">
+      <div class="field">
+        <label>New Question 1</label>
+        <select id="nq1">
+          <option value="">-- select a question --</option>
+          <option>What was the name of your childhood best friend?</option>
+          <option>What was the first concert you ever attended?</option>
+          <option>What was the nickname of your childhood home or bedroom?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What was the first video game you ever played?</option>
+          <option>How many floors did your house have growing up?</option>
+          <option>What was the name of your imaginary friend as a child?</option>
+          <option>What was the make and model of the first car you ever drove?</option>
+          <option>What is the middle name of your oldest sibling?</option>
+          <option>What was the name of your favorite teacher in elementary school?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>New Answer 1</label>
+        <input type="text" id="na1" placeholder="your new answer">
+      </div>
+    </div>
+    <div class="question-block" data-num="NQ2">
+      <div class="field">
+        <label>New Question 2</label>
+        <select id="nq2">
+          <option value="">-- select a question --</option>
+          <option>What was the name of your childhood best friend?</option>
+          <option>What was the first concert you ever attended?</option>
+          <option>What was the nickname of your childhood home or bedroom?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What was the first video game you ever played?</option>
+          <option>How many floors did your house have growing up?</option>
+          <option>What was the name of your imaginary friend as a child?</option>
+          <option>What was the make and model of the first car you ever drove?</option>
+          <option>What is the middle name of your oldest sibling?</option>
+          <option>What was the name of your favorite teacher in elementary school?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>New Answer 2</label>
+        <input type="text" id="na2" placeholder="your new answer">
+      </div>
+    </div>
+    <div class="question-block" data-num="NQ3">
+      <div class="field">
+        <label>New Question 3</label>
+        <select id="nq3">
+          <option value="">-- select a question --</option>
+          <option>What was the name of your childhood best friend?</option>
+          <option>What was the first concert you ever attended?</option>
+          <option>What was the nickname of your childhood home or bedroom?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What was the first video game you ever played?</option>
+          <option>How many floors did your house have growing up?</option>
+          <option>What was the name of your imaginary friend as a child?</option>
+          <option>What was the make and model of the first car you ever drove?</option>
+          <option>What is the middle name of your oldest sibling?</option>
+          <option>What was the name of your favorite teacher in elementary school?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>New Answer 3</label>
+        <input type="text" id="na3" placeholder="your new answer">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="submitNewQuestions()">&#9632; Save New Questions</button>
+      <button class="btn btn-secondary" onclick="cancelChange()">Cancel</button>
+    </div>
+  </div>
+  <div id="change-alert"></div>
+</div>
+
+<!-- CHANGE RECOVERY CARD -->
+<div class="card" id="change-recovery-card">
+  <div class="card-label">Change Recovery Method</div>
+  <p style="font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:24px">
+    Enter your current recovery PIN or passphrase to verify, then set a new one.
+  </p>
+  <div class="field">
+    <label>Current Recovery PIN or Passphrase</label>
+    <input type="password" id="current-recovery-value" placeholder="enter current value">
+  </div>
+  <div class="card-label" style="margin-bottom:12px;margin-top:8px">New Recovery Method</div>
+  <div class="recovery-type-select">
+    <button class="type-btn active" id="change-pin-btn" onclick="setChangeRecoveryType('pin')">PIN (4+ digits)</button>
+    <button class="type-btn" id="change-phrase-btn" onclick="setChangeRecoveryType('phrase')">Passphrase (5+ letters)</button>
+  </div>
+  <div class="field">
+    <label id="change-recovery-label">New Recovery PIN</label>
+    <input type="password" id="new-recovery-value" placeholder="enter at least 4 digits">
+  </div>
+  <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="submitChangeRecovery()">&#9632; Save New Recovery Method</button>
+    <button class="btn btn-secondary" onclick="cancelChangeRecovery()">Cancel</button>
+  </div>
+  <div id="change-recovery-alert"></div>
+</div>
+
 <!-- DASHBOARD CARD -->
 <div class="card" id="dashboard-card">
   <div class="card-label">Session Active</div>
@@ -374,6 +640,8 @@
   <div class="welcome-sub">authenticated via passkey · session secured</div>
   <div class="btn-row">
     <button class="btn btn-secondary" onclick="loadHistory()">&#9632; Login History</button>
+    <button class="btn btn-warn" onclick="showChangeCard()">&#9632; Change Security Questions</button>
+    <button class="btn btn-warn" onclick="showChangeRecoveryCard()">&#9632; Change Recovery Method</button>
     <button class="btn btn-danger" onclick="doLogout()">&#9632; Sign Out</button>
   </div>
   <div id="history-section">
@@ -392,25 +660,74 @@
   </div>
 </div>
 
-<footer>IT 575 · Advanced Computer Security · Marymount University · 2026</footer>
+<footer>IT 575 · Information Management Security · Marymount University · 2026</footer>
 
 <script>
   let currentUser = null;
   let currentEscalationLevel = 1;
   let currentAnswers = [];
+  let verifiedCurrentAnswers = [];
+  let regRecoveryType = 'pin';
+  let changeRecoveryType = 'pin';
+  let recoveryUsername = null;
 
+  // ---- Alerts ----
   function showAlert(text, type) {
     const el = document.getElementById('alert');
     el.textContent = text;
     el.className = type;
   }
-
   function showChallengeAlert(text, type) {
     const el = document.getElementById('challenge-alert');
     el.textContent = text;
     el.className = type;
   }
+  function showChangeAlert(text, type) {
+    const el = document.getElementById('change-alert');
+    el.textContent = text;
+    el.className = type;
+  }
+  function showRecoveryAlert(text, type) {
+    const el = document.getElementById('recovery-alert');
+    el.textContent = text;
+    el.className = type;
+  }
+  function showChangeRecoveryAlert(text, type) {
+    const el = document.getElementById('change-recovery-alert');
+    el.textContent = text;
+    el.className = type;
+  }
 
+  // ---- Recovery type toggles ----
+  function setRegRecoveryType(type) {
+    regRecoveryType = type;
+    document.getElementById('reg-pin-btn').classList.toggle('active', type === 'pin');
+    document.getElementById('reg-phrase-btn').classList.toggle('active', type === 'phrase');
+    document.getElementById('reg-recovery-label').textContent = type === 'pin' ? 'Recovery PIN' : 'Recovery Passphrase';
+    document.getElementById('reg-recovery-value').placeholder = type === 'pin' ? 'enter at least 4 digits' : 'enter at least 5 characters';
+  }
+
+  function setChangeRecoveryType(type) {
+    changeRecoveryType = type;
+    document.getElementById('change-pin-btn').classList.toggle('active', type === 'pin');
+    document.getElementById('change-phrase-btn').classList.toggle('active', type === 'phrase');
+    document.getElementById('change-recovery-label').textContent = type === 'pin' ? 'New Recovery PIN' : 'New Recovery Passphrase';
+    document.getElementById('new-recovery-value').placeholder = type === 'pin' ? 'enter at least 4 digits' : 'enter at least 5 characters';
+  }
+
+  // ---- Tabs ----
+  function switchTab(tab) {
+    const tabs = ['login', 'register', 'recover'];
+    document.querySelectorAll('.tab').forEach((b, i) => {
+      b.classList.toggle('active', tabs[i] === tab);
+    });
+    document.getElementById('pane-login').classList.toggle('active', tab === 'login');
+    document.getElementById('pane-register').classList.toggle('active', tab === 'register');
+    document.getElementById('pane-recover').classList.toggle('active', tab === 'recover');
+    document.getElementById('alert').className = '';
+  }
+
+  // ---- Clear register form ----
   function clearRegisterForm() {
     document.getElementById('reg-username').value = '';
     document.getElementById('q1').selectedIndex = 0;
@@ -419,17 +736,11 @@
     document.getElementById('a1').value = '';
     document.getElementById('a2').value = '';
     document.getElementById('a3').value = '';
+    document.getElementById('reg-recovery-value').value = '';
+    setRegRecoveryType('pin');
   }
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((b, i) => {
-      b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
-    });
-    document.getElementById('pane-login').classList.toggle('active', tab === 'login');
-    document.getElementById('pane-register').classList.toggle('active', tab === 'register');
-    document.getElementById('alert').className = '';
-  }
-
+  // ---- Register ----
   async function doRegister() {
     const username = document.getElementById('reg-username').value.trim();
     const q1 = document.getElementById('q1').value;
@@ -438,11 +749,19 @@
     const a1 = document.getElementById('a1').value.trim();
     const a2 = document.getElementById('a2').value.trim();
     const a3 = document.getElementById('a3').value.trim();
+    const recoveryValue = document.getElementById('reg-recovery-value').value.trim();
 
     if (!username) { showAlert('Please enter a username.', 'err'); return; }
     if (!q1 || !q2 || !q3) { showAlert('Please select all 3 security questions.', 'err'); return; }
     if (!a1 || !a2 || !a3) { showAlert('Please answer all 3 security questions.', 'err'); return; }
     if (q1 === q2 || q1 === q3 || q2 === q3) { showAlert('Please select 3 different questions.', 'err'); return; }
+    if (!recoveryValue) { showAlert('Please set a recovery PIN or passphrase.', 'err'); return; }
+    if (regRecoveryType === 'pin' && (!/^\d+$/.test(recoveryValue) || recoveryValue.length < 4)) {
+      showAlert('PIN must be at least 4 digits.', 'err'); return;
+    }
+    if (regRecoveryType === 'phrase' && recoveryValue.length < 5) {
+      showAlert('Passphrase must be at least 5 characters.', 'err'); return;
+    }
 
     const res = await fetch('/register', {
       method: 'POST',
@@ -453,7 +772,9 @@
           { question: q1, answer: a1 },
           { question: q2, answer: a2 },
           { question: q3, answer: a3 }
-        ]
+        ],
+        recovery_type: regRecoveryType,
+        recovery_value: recoveryValue
       })
     });
     const data = await res.json();
@@ -469,6 +790,7 @@
     }
   }
 
+  // ---- Login ----
   async function doLogin() {
     const username = document.getElementById('login-username').value.trim();
     if (!username) { showAlert('Please enter your username.', 'err'); return; }
@@ -486,6 +808,11 @@
     });
     const data = await res.json();
 
+    if (data.error) {
+      showAlert(data.error, 'err');
+      return;
+    }
+
     showRisk(data.risk);
 
     if (data.risk.decision === 'allowed') {
@@ -500,7 +827,6 @@
       return;
     }
 
-    // challenged_1, challenged_2, or challenged_3
     currentUser = username;
     currentAnswers = [];
     const levelMap = { challenged_1: 1, challenged_2: 2, challenged_3: 3 };
@@ -518,11 +844,90 @@
     document.getElementById('challenge-card').scrollIntoView({ behavior: 'smooth' });
   }
 
+  // ---- Account Recovery ----
+  async function doRecovery() {
+    const username = document.getElementById('recover-username').value.trim();
+    const recoveryValue = document.getElementById('recover-value').value.trim();
+
+    if (!username || !recoveryValue) {
+      showAlert('Please enter your username and recovery value.', 'err');
+      return;
+    }
+
+    const credential_id = localStorage.getItem('credential_' + username);
+    if (!credential_id) {
+      showAlert('No passkey found for this username on this device.', 'err');
+      return;
+    }
+
+    const res = await fetch('/recovery/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, credential_id, recovery_value: recoveryValue })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      showAlert(data.error, 'err');
+      return;
+    }
+
+    // Recovery success — show reset questions card
+    recoveryUsername = username;
+    showAlert('✓ Recovery successful. Set new security questions to continue.', 'ok');
+    document.getElementById('auth-card').style.display = 'none';
+    document.getElementById('recovery-card').style.display = 'block';
+    document.getElementById('recovery-card').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function submitRecoveryQuestions() {
+    const rq1 = document.getElementById('rq1').value;
+    const rq2 = document.getElementById('rq2').value;
+    const rq3 = document.getElementById('rq3').value;
+    const ra1 = document.getElementById('ra1').value.trim();
+    const ra2 = document.getElementById('ra2').value.trim();
+    const ra3 = document.getElementById('ra3').value.trim();
+
+    if (!rq1 || !rq2 || !rq3) { showRecoveryAlert('Please select all 3 questions.', 'err'); return; }
+    if (!ra1 || !ra2 || !ra3) { showRecoveryAlert('Please answer all 3 questions.', 'err'); return; }
+    if (rq1 === rq2 || rq1 === rq3 || rq2 === rq3) { showRecoveryAlert('Please select 3 different questions.', 'err'); return; }
+
+    const credential_id = localStorage.getItem('credential_' + recoveryUsername);
+
+    const res = await fetch('/questions/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: recoveryUsername,
+        credential_id,
+        new_questions: [
+          { question: rq1, answer: ra1 },
+          { question: rq2, answer: ra2 },
+          { question: rq3, answer: ra3 }
+        ]
+      })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      showRecoveryAlert(data.error, 'err');
+    } else {
+      showRecoveryAlert('✓ Questions saved. You can now log in.', 'ok');
+      setTimeout(() => {
+        document.getElementById('recovery-card').style.display = 'none';
+        document.getElementById('auth-card').style.display = 'block';
+        document.getElementById('login-username').value = recoveryUsername;
+        switchTab('login');
+        recoveryUsername = null;
+      }, 1500);
+    }
+  }
+
+  // ---- Challenge ----
   function renderChallengeQuestions(questions, lockedAnswers, retryQuestion) {
     const container = document.getElementById('challenge-questions');
     container.innerHTML = '';
 
-    // Show locked correct answers
     lockedAnswers.forEach((a, i) => {
       const block = document.createElement('div');
       block.className = 'question-block correct locked';
@@ -537,7 +942,6 @@
       container.appendChild(block);
     });
 
-    // Show active questions
     questions.forEach((q, i) => {
       const num = lockedAnswers.length + i + 1;
       const block = document.createElement('div');
@@ -552,7 +956,6 @@
       container.appendChild(block);
     });
 
-    // Show retry question
     if (retryQuestion) {
       const num = lockedAnswers.length + questions.length + 1;
       const block = document.createElement('div');
@@ -580,42 +983,27 @@
       newAnswers.push({ question: label.textContent, answer: input.value.trim() });
     });
 
-    if (!allFilled) {
-      showChallengeAlert('Please answer all questions.', 'err');
-      return;
-    }
+    if (!allFilled) { showChallengeAlert('Please answer all questions.', 'err'); return; }
 
     const allAnswers = [...currentAnswers, ...newAnswers];
 
     const res = await fetch('/challenge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: currentUser,
-        answers: allAnswers,
-        escalation_level: currentEscalationLevel
-      })
+      body: JSON.stringify({ username: currentUser, answers: allAnswers, escalation_level: currentEscalationLevel })
     });
     const data = await res.json();
 
-    // Blocked
     if (data.blocked) {
       showChallengeAlert('Access denied — ' + data.message, 'err');
-      setTimeout(() => {
-        cancelChallenge();
-        showAlert('Access denied — failed verification.', 'err');
-      }, 2000);
+      setTimeout(() => { cancelChallenge(); showAlert('Access denied — failed verification.', 'err'); }, 2000);
       return;
     }
-
-    // Allowed
     if (data.success) {
       showChallengeAlert('✓ Identity verified.', 'ok');
       setTimeout(() => showDashboard(currentUser), 700);
       return;
     }
-
-    // Escalate
     if (data.escalate) {
       currentEscalationLevel = data.escalation_level;
       currentAnswers = data.previous_answers;
@@ -624,8 +1012,6 @@
       renderChallengeQuestions([data.new_question], data.previous_answers, null);
       return;
     }
-
-    // Retry
     if (data.retry) {
       currentAnswers = data.previous_answers;
       currentEscalationLevel = 3;
@@ -636,6 +1022,15 @@
     }
   }
 
+  function cancelChallenge() {
+    document.getElementById('challenge-card').style.display = 'none';
+    document.getElementById('risk-card').style.display = 'none';
+    currentUser = null;
+    currentAnswers = [];
+    currentEscalationLevel = 1;
+  }
+
+  // ---- Risk display ----
   function showRisk(risk) {
     if (!risk) return;
     document.getElementById('risk-card').style.display = 'block';
@@ -643,23 +1038,16 @@
     const numEl = document.getElementById('score-num');
     numEl.textContent = score;
     numEl.style.color = score >= 76 ? 'var(--danger)' : score >= 26 ? 'var(--warn)' : 'var(--ok)';
-
     const dec = document.getElementById('decision-text');
     const decLabels = {
-      allowed: 'ALLOWED',
-      challenged_1: 'VERIFY — 1 QUESTION',
-      challenged_2: 'VERIFY — 2 QUESTIONS',
-      challenged_3: 'VERIFY — 3 QUESTIONS',
-      blocked: 'BLOCKED'
+      allowed: 'ALLOWED', challenged_1: 'VERIFY — 1 QUESTION',
+      challenged_2: 'VERIFY — 2 QUESTIONS', challenged_3: 'VERIFY — 3 QUESTIONS', blocked: 'BLOCKED'
     };
     dec.textContent = decLabels[risk.decision] || risk.decision.toUpperCase();
     dec.className = 'decision-text ' + risk.decision;
-
     const subs = {
-      allowed: 'low risk — access granted',
-      challenged_1: 'low-moderate risk — 1 question required',
-      challenged_2: 'moderate risk — 2 questions required',
-      challenged_3: 'high risk — all 3 questions required',
+      allowed: 'low risk — access granted', challenged_1: 'low-moderate risk — 1 question required',
+      challenged_2: 'moderate risk — 2 questions required', challenged_3: 'high risk — all 3 questions required',
       blocked: 'critical risk — access denied'
     };
     document.getElementById('decision-sub').textContent = subs[risk.decision] || '';
@@ -671,14 +1059,158 @@
     `).join('');
   }
 
-  function cancelChallenge() {
-    document.getElementById('challenge-card').style.display = 'none';
-    document.getElementById('risk-card').style.display = 'none';
-    currentUser = null;
-    currentAnswers = [];
-    currentEscalationLevel = 1;
+  // ---- Change Security Questions ----
+  async function showChangeCard() {
+    const credential_id = localStorage.getItem('credential_' + currentUser);
+    const res = await fetch('/questions/get', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: currentUser, credential_id })
+    });
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+
+    const container = document.getElementById('current-questions-list');
+    container.innerHTML = data.questions.map((q, i) => `
+      <div class="question-block" data-num="Q${i + 1}">
+        <div class="field" style="margin-bottom:0">
+          <label>${q.question}</label>
+          <input type="text" id="vq${i}" placeholder="your answer">
+        </div>
+      </div>
+    `).join('');
+
+    verifiedCurrentAnswers = data.questions;
+    document.getElementById('new-questions-section').style.display = 'none';
+    document.getElementById('change-alert').className = '';
+    document.getElementById('change-alert').textContent = '';
+    document.getElementById('verify-stage').style.opacity = '1';
+    document.getElementById('verify-stage').style.pointerEvents = 'auto';
+    document.getElementById('change-card').style.display = 'block';
+    document.getElementById('change-card').scrollIntoView({ behavior: 'smooth' });
   }
 
+  async function verifyCurrentAnswers() {
+    const answers = verifiedCurrentAnswers.map((q, i) => ({
+      question: q.question,
+      answer: document.getElementById('vq' + i).value.trim()
+    }));
+
+    if (answers.some(a => !a.answer)) { showChangeAlert('Please answer all current security questions.', 'err'); return; }
+
+    const credential_id = localStorage.getItem('credential_' + currentUser);
+    const res = await fetch('/questions/change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: currentUser,
+        credential_id,
+        current_answers: answers,
+        new_questions: answers.map(a => ({ question: a.question, answer: a.answer }))
+      })
+    });
+    const data = await res.json();
+
+    if (data.error) { showChangeAlert(data.error, 'err'); return; }
+
+    showChangeAlert('✓ Identity verified. Set your new questions below.', 'ok');
+    document.getElementById('verify-stage').style.opacity = '0.4';
+    document.getElementById('verify-stage').style.pointerEvents = 'none';
+    document.getElementById('new-questions-section').style.display = 'block';
+    document.getElementById('new-questions-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function submitNewQuestions() {
+    const nq1 = document.getElementById('nq1').value;
+    const nq2 = document.getElementById('nq2').value;
+    const nq3 = document.getElementById('nq3').value;
+    const na1 = document.getElementById('na1').value.trim();
+    const na2 = document.getElementById('na2').value.trim();
+    const na3 = document.getElementById('na3').value.trim();
+
+    if (!nq1 || !nq2 || !nq3) { showChangeAlert('Please select all 3 new questions.', 'err'); return; }
+    if (!na1 || !na2 || !na3) { showChangeAlert('Please answer all 3 new questions.', 'err'); return; }
+    if (nq1 === nq2 || nq1 === nq3 || nq2 === nq3) { showChangeAlert('Please select 3 different questions.', 'err'); return; }
+
+    const credential_id = localStorage.getItem('credential_' + currentUser);
+    const currentAnswers_verified = verifiedCurrentAnswers.map((q, i) => ({
+      question: q.question,
+      answer: document.getElementById('vq' + i).value.trim()
+    }));
+
+    const res = await fetch('/questions/change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: currentUser,
+        credential_id,
+        current_answers: currentAnswers_verified,
+        new_questions: [
+          { question: nq1, answer: na1 },
+          { question: nq2, answer: na2 },
+          { question: nq3, answer: na3 }
+        ]
+      })
+    });
+    const data = await res.json();
+
+    if (data.error) { showChangeAlert(data.error, 'err'); }
+    else { showChangeAlert('✓ Security questions updated successfully.', 'ok'); setTimeout(() => cancelChange(), 1500); }
+  }
+
+  function cancelChange() {
+    document.getElementById('change-card').style.display = 'none';
+    document.getElementById('new-questions-section').style.display = 'none';
+    document.getElementById('verify-stage').style.opacity = '1';
+    document.getElementById('verify-stage').style.pointerEvents = 'auto';
+    verifiedCurrentAnswers = [];
+  }
+
+  // ---- Change Recovery Method ----
+  function showChangeRecoveryCard() {
+    document.getElementById('current-recovery-value').value = '';
+    document.getElementById('new-recovery-value').value = '';
+    setChangeRecoveryType('pin');
+    document.getElementById('change-recovery-alert').className = '';
+    document.getElementById('change-recovery-card').style.display = 'block';
+    document.getElementById('change-recovery-card').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function submitChangeRecovery() {
+    const currentValue = document.getElementById('current-recovery-value').value.trim();
+    const newValue = document.getElementById('new-recovery-value').value.trim();
+
+    if (!currentValue || !newValue) { showChangeRecoveryAlert('Please fill in all fields.', 'err'); return; }
+    if (changeRecoveryType === 'pin' && (!/^\d+$/.test(newValue) || newValue.length < 4)) {
+      showChangeRecoveryAlert('PIN must be at least 4 digits.', 'err'); return;
+    }
+    if (changeRecoveryType === 'phrase' && newValue.length < 5) {
+      showChangeRecoveryAlert('Passphrase must be at least 5 characters.', 'err'); return;
+    }
+
+    const credential_id = localStorage.getItem('credential_' + currentUser);
+    const res = await fetch('/recovery/change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: currentUser,
+        credential_id,
+        current_value: currentValue,
+        new_value: newValue,
+        new_type: changeRecoveryType
+      })
+    });
+    const data = await res.json();
+
+    if (data.error) { showChangeRecoveryAlert(data.error, 'err'); }
+    else { showChangeRecoveryAlert('✓ Recovery method updated.', 'ok'); setTimeout(() => cancelChangeRecovery(), 1500); }
+  }
+
+  function cancelChangeRecovery() {
+    document.getElementById('change-recovery-card').style.display = 'none';
+  }
+
+  // ---- Dashboard ----
   function showDashboard(username) {
     document.getElementById('auth-card').style.display = 'none';
     document.getElementById('challenge-card').style.display = 'none';
@@ -707,12 +1239,18 @@
     currentUser = null;
     currentAnswers = [];
     currentEscalationLevel = 1;
+    verifiedCurrentAnswers = [];
+    recoveryUsername = null;
     document.getElementById('dashboard-card').style.display = 'none';
     document.getElementById('risk-card').style.display = 'none';
     document.getElementById('challenge-card').style.display = 'none';
+    document.getElementById('change-card').style.display = 'none';
+    document.getElementById('change-recovery-card').style.display = 'none';
+    document.getElementById('recovery-card').style.display = 'none';
     document.getElementById('auth-card').style.display = 'block';
     document.getElementById('alert').className = '';
     document.getElementById('login-username').value = '';
+    document.getElementById('history-section').style.display = 'none';
   }
 </script>
 </body>
