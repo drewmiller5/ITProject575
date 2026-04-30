@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT 575 — Passwordless Auth</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #04080f;
+    --panel:   #080f1a;
+    --border:  #0f2235;
+    --glow:    #00ffe0;
+    --glow2:   #0088ff;
+    --danger:  #ff3355;
+    --warn:    #ffaa00;
+    --ok:      #00ffe0;
+    --text:    #a8cfe0;
+    --dim:     #2a4a60;
+    --mono:    'Share Tech Mono', monospace;
+    --sans:    'Rajdhani', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 60px;
+    background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,136,255,0.06) 0%, transparent 70%);
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(transparent 50%, rgba(0,255,224,0.015) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  header {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .logo { font-family: var(--mono); font-size: 13px; color: var(--glow); letter-spacing: 0.08em; }
+  .logo span { color: var(--dim); }
+  .header-right { font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: right; line-height: 1.6; }
+  .pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); margin-right: 6px; animation: blink 2s infinite; vertical-align: middle; }
+
+  @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:none} }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 680px;
+    padding: 32px;
+    margin-bottom: 16px;
+    position: relative;
+    animation: fadeUp 0.5s ease both;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glow2), transparent);
+  }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--glow2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  h1 { font-family: var(--sans); font-size: 32px; font-weight: 600; color: #fff; letter-spacing: 0.04em; margin-bottom: 6px; }
+  h1 em { font-style: normal; color: var(--glow); }
+  .subtitle { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-bottom: 28px; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab { font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 20px; cursor: pointer; color: var(--dim); background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+  .tab.active { color: var(--glow); border-bottom-color: var(--glow); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .field { margin-bottom: 18px; }
+  label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); margin-bottom: 7px; }
+
+  input[type=text] {
+    width: 100%;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    padding: 11px 14px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type=text]:focus { border-color: var(--glow2); box-shadow: 0 0 12px rgba(0,136,255,0.15); }
+  input[type=text]:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--dim); }
+
+  select {
+    width: 100%;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    padding: 11px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  select:focus { border-color: var(--glow2); }
+
+  .question-block {
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .question-block.locked { border-color: var(--dim); opacity: 0.6; }
+  .question-block.correct { border-color: rgba(0,255,224,0.4); background: rgba(0,255,224,0.03); }
+  .question-block::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -10px; left: 12px;
+    background: var(--panel);
+    padding: 0 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--glow2);
+    letter-spacing: 0.1em;
+  }
+  .question-block.locked::before { color: var(--dim); }
+  .question-block.correct::before { color: var(--ok); }
+
+  .answer-status { font-family: var(--mono); font-size: 10px; margin-top: 6px; letter-spacing: 0.1em; }
+  .answer-status.ok  { color: var(--ok); }
+  .answer-status.err { color: var(--danger); }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; border: 1px solid; transition: all 0.2s; background: none; }
+  .btn-primary { color: #000; background: var(--glow); border-color: var(--glow); font-weight: 700; }
+  .btn-primary:hover { background: #33fff0; box-shadow: 0 0 24px rgba(0,255,224,0.3); }
+  .btn-secondary { color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--glow2); color: var(--glow2); }
+  .btn-danger { color: var(--danger); border-color: var(--danger); }
+  .btn-danger:hover { background: rgba(255,51,85,0.08); }
+  .btn-warn { color: var(--warn); border-color: var(--warn); }
+  .btn-warn:hover { background: rgba(255,170,0,0.08); }
+
+  #alert { margin-top: 16px; padding: 11px 14px; font-family: var(--mono); font-size: 12px; display: none; border: 1px solid; }
+  #alert.ok   { color: var(--ok);     border-color: rgba(0,255,224,0.3); background: rgba(0,255,224,0.05); display:block; }
+  #alert.err  { color: var(--danger); border-color: rgba(255,51,85,0.3);  background: rgba(255,51,85,0.05);  display:block; }
+  #alert.warn { color: var(--warn);   border-color: rgba(255,170,0,0.3);  background: rgba(255,170,0,0.05);  display:block; }
+
+  #risk-card { display: none; animation: fadeUp 0.4s ease both; }
+  .risk-header { display: flex; align-items: center; gap: 24px; margin-bottom: 20px; }
+  .score-box { width: 80px; height: 80px; border: 2px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+  .score-num { font-family: var(--mono); font-size: 28px; font-weight: 700; line-height: 1; }
+  .score-lbl { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 0.1em; }
+  .decision-text { font-family: var(--sans); font-size: 22px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+  .decision-text.allowed      { color: var(--ok); }
+  .decision-text.challenged_1,
+  .decision-text.challenged_2,
+  .decision-text.challenged_3 { color: var(--warn); }
+  .decision-text.blocked      { color: var(--danger); }
+  .decision-sub { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 4px; }
+  .factor-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(15,34,53,0.8); }
+  .factor-row:last-child { border: none; }
+  .factor-name { font-family: var(--mono); font-size: 10px; color: var(--dim); text-transform: uppercase; width: 80px; flex-shrink: 0; }
+  .factor-desc { font-family: var(--mono); font-size: 11px; color: var(--text); flex: 1; }
+
+  #challenge-card { display: none; animation: fadeUp 0.4s ease both; }
+  .challenge-status { font-family: var(--mono); font-size: 12px; padding: 10px 14px; border: 1px solid rgba(255,170,0,0.3); background: rgba(255,170,0,0.05); color: var(--warn); margin-bottom: 20px; }
+
+  #challenge-alert { margin-top: 16px; padding: 11px 14px; font-family: var(--mono); font-size: 12px; display: none; border: 1px solid; }
+  #challenge-alert.err { color: var(--danger); border-color: rgba(255,51,85,0.3); background: rgba(255,51,85,0.05); display:block; }
+  #challenge-alert.ok  { color: var(--ok);     border-color: rgba(0,255,224,0.3); background: rgba(0,255,224,0.05); display:block; }
+
+  #dashboard-card { display: none; animation: fadeUp 0.4s ease both; }
+  .welcome { font-family: var(--sans); font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .welcome span { color: var(--glow); }
+  .welcome-sub { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-bottom: 20px; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  #history-section { display: none; margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; margin-top: 12px; }
+  th { text-align: left; color: var(--dim); padding: 6px 10px; border-bottom: 1px solid var(--border); letter-spacing: 0.1em; text-transform: uppercase; }
+  td { padding: 8px 10px; border-bottom: 1px solid rgba(15,34,53,0.6); color: var(--text); }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+  .badge.allowed      { color: var(--ok);     background: rgba(0,255,224,0.08); }
+  .badge.challenged   { color: var(--warn);   background: rgba(255,170,0,0.08); }
+  .badge.blocked      { color: var(--danger); background: rgba(255,51,85,0.08); }
+
+  footer { margin-top: 40px; font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 0.12em; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span class="pulse"></span>ADAPTIVE<span>/</span>AUTH</div>
+  <div class="header-right">
+    IT 575 — Advanced Computer Security<br>
+    Marymount University · 2026
+  </div>
+</header>
+
+<!-- AUTH CARD -->
+<div class="card" id="auth-card">
+  <div class="card-label">Authentication Terminal</div>
+  <h1>Passwordless <em>Login</em></h1>
+  <p class="subtitle">// no passwords stored or transmitted · adaptive risk engine</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Sign In</button>
+    <button class="tab" onclick="switchTab('register')">Register</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="tab-pane active" id="pane-login">
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="enter your username">
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">&#9632; Authenticate</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="tab-pane" id="pane-register">
+    <div class="field">
+      <label>Choose a Username</label>
+      <input type="text" id="reg-username" placeholder="enter a username">
+    </div>
+
+    <div class="card-label" style="margin-bottom:16px">Security Questions</div>
+
+    <div class="question-block" data-num="Q1">
+      <div class="field">
+        <label>Question 1</label>
+        <select id="q1">
+          <option value="">-- select a question --</option>
+          <option>What was the name of your childhood best friend?</option>
+          <option>What was the first concert you ever attended?</option>
+          <option>What was the nickname of your childhood home or bedroom?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What was the first video game you ever played?</option>
+          <option>How many floors did your house have growing up?</option>
+          <option>What was the name of your imaginary friend as a child?</option>
+          <option>What was the make and model of the first car you ever drove?</option>
+          <option>What is the middle name of your oldest sibling?</option>
+          <option>What was the name of your favorite teacher in elementary school?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Answer 1</label>
+        <input type="text" id="a1" placeholder="your answer">
+      </div>
+    </div>
+
+    <div class="question-block" data-num="Q2">
+      <div class="field">
+        <label>Question 2</label>
+        <select id="q2">
+          <option value="">-- select a question --</option>
+          <option>What was the name of your childhood best friend?</option>
+          <option>What was the first concert you ever attended?</option>
+          <option>What was the nickname of your childhood home or bedroom?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What was the first video game you ever played?</option>
+          <option>How many floors did your house have growing up?</option>
+          <option>What was the name of your imaginary friend as a child?</option>
+          <option>What was the make and model of the first car you ever drove?</option>
+          <option>What is the middle name of your oldest sibling?</option>
+          <option>What was the name of your favorite teacher in elementary school?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Answer 2</label>
+        <input type="text" id="a2" placeholder="your answer">
+      </div>
+    </div>
+
+    <div class="question-block" data-num="Q3">
+      <div class="field">
+        <label>Question 3</label>
+        <select id="q3">
+          <option value="">-- select a question --</option>
+          <option>What was the name of your childhood best friend?</option>
+          <option>What was the first concert you ever attended?</option>
+          <option>What was the nickname of your childhood home or bedroom?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What was the first video game you ever played?</option>
+          <option>How many floors did your house have growing up?</option>
+          <option>What was the name of your imaginary friend as a child?</option>
+          <option>What was the make and model of the first car you ever drove?</option>
+          <option>What is the middle name of your oldest sibling?</option>
+          <option>What was the name of your favorite teacher in elementary school?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Answer 3</label>
+        <input type="text" id="a3" placeholder="your answer">
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="doRegister()" style="margin-top:8px">&#9632; Register Passkey</button>
+  </div>
+
+  <div id="alert"></div>
+</div>
+
+<!-- RISK CARD -->
+<div class="card" id="risk-card">
+  <div class="card-label">AI Risk Assessment</div>
+  <div class="risk-header">
+    <div class="score-box">
+      <div class="score-num" id="score-num">0</div>
+      <div class="score-lbl">/ 100</div>
+    </div>
+    <div>
+      <div class="decision-text" id="decision-text">—</div>
+      <div class="decision-sub" id="decision-sub"></div>
+    </div>
+  </div>
+  <div id="factor-list"></div>
+</div>
+
+<!-- CHALLENGE CARD -->
+<div class="card" id="challenge-card">
+  <div class="card-label">Identity Verification</div>
+  <div class="challenge-status" id="challenge-status">
+    ⚠ Your login was flagged. Please answer your security questions to continue.
+  </div>
+  <div id="challenge-questions"></div>
+  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+    <button class="btn btn-warn" onclick="doChallenge()">&#9632; Submit Answers</button>
+    <button class="btn btn-secondary" onclick="cancelChallenge()">Cancel</button>
+  </div>
+  <div id="challenge-alert"></div>
+</div>
+
+<!-- DASHBOARD CARD -->
+<div class="card" id="dashboard-card">
+  <div class="card-label">Session Active</div>
+  <div class="welcome">Welcome, <span id="dash-username"></span></div>
+  <div class="welcome-sub">authenticated via passkey · session secured</div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="loadHistory()">&#9632; Login History</button>
+    <button class="btn btn-danger" onclick="doLogout()">&#9632; Sign Out</button>
+  </div>
+  <div id="history-section">
+    <div class="card-label" style="margin-top:20px">Recent Login Events</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>IP Address</th>
+          <th>Risk Score</th>
+          <th>Outcome</th>
+        </tr>
+      </thead>
+      <tbody id="history-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>IT 575 · Advanced Computer Security · Marymount University · 2026</footer>
+
+<script>
+  let currentUser = null;
+  let currentEscalationLevel = 1;
+  let currentAnswers = [];
+
+  function showAlert(text, type) {
+    const el = document.getElementById('alert');
+    el.textContent = text;
+    el.className = type;
+  }
+
+  function showChallengeAlert(text, type) {
+    const el = document.getElementById('challenge-alert');
+    el.textContent = text;
+    el.className = type;
+  }
+
+  function clearRegisterForm() {
+    document.getElementById('reg-username').value = '';
+    document.getElementById('q1').selectedIndex = 0;
+    document.getElementById('q2').selectedIndex = 0;
+    document.getElementById('q3').selectedIndex = 0;
+    document.getElementById('a1').value = '';
+    document.getElementById('a2').value = '';
+    document.getElementById('a3').value = '';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+    document.getElementById('pane-login').classList.toggle('active', tab === 'login');
+    document.getElementById('pane-register').classList.toggle('active', tab === 'register');
+    document.getElementById('alert').className = '';
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const q1 = document.getElementById('q1').value;
+    const q2 = document.getElementById('q2').value;
+    const q3 = document.getElementById('q3').value;
+    const a1 = document.getElementById('a1').value.trim();
+    const a2 = document.getElementById('a2').value.trim();
+    const a3 = document.getElementById('a3').value.trim();
+
+    if (!username) { showAlert('Please enter a username.', 'err'); return; }
+    if (!q1 || !q2 || !q3) { showAlert('Please select all 3 security questions.', 'err'); return; }
+    if (!a1 || !a2 || !a3) { showAlert('Please answer all 3 security questions.', 'err'); return; }
+    if (q1 === q2 || q1 === q3 || q2 === q3) { showAlert('Please select 3 different questions.', 'err'); return; }
+
+    const res = await fetch('/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username,
+        security_questions: [
+          { question: q1, answer: a1 },
+          { question: q2, answer: a2 },
+          { question: q3, answer: a3 }
+        ]
+      })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      showAlert(data.error, 'err');
+    } else {
+      localStorage.setItem('credential_' + username, data.credential_id);
+      clearRegisterForm();
+      showAlert('Registered successfully. You can now sign in.', 'ok');
+      switchTab('login');
+      document.getElementById('login-username').value = username;
+    }
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    if (!username) { showAlert('Please enter your username.', 'err'); return; }
+
+    const credential_id = localStorage.getItem('credential_' + username);
+    if (!credential_id) {
+      showAlert('No passkey found for this username on this device. Please register first.', 'err');
+      return;
+    }
+
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, credential_id })
+    });
+    const data = await res.json();
+
+    showRisk(data.risk);
+
+    if (data.risk.decision === 'allowed') {
+      showAlert('Access granted.', 'ok');
+      currentUser = username;
+      setTimeout(() => showDashboard(username), 700);
+      return;
+    }
+
+    if (data.risk.decision === 'blocked') {
+      showAlert('Access denied — risk score too high.', 'err');
+      return;
+    }
+
+    // challenged_1, challenged_2, or challenged_3
+    currentUser = username;
+    currentAnswers = [];
+    const levelMap = { challenged_1: 1, challenged_2: 2, challenged_3: 3 };
+    currentEscalationLevel = levelMap[data.risk.decision];
+
+    const statusMap = {
+      challenged_1: '⚠ First time login detected — please answer 1 security question.',
+      challenged_2: '⚠ Moderate risk detected — please answer 2 security questions.',
+      challenged_3: '⚠ High risk detected — please answer all 3 security questions.'
+    };
+    document.getElementById('challenge-status').textContent = statusMap[data.risk.decision];
+    showAlert('Login flagged — answer your security questions below.', 'warn');
+    renderChallengeQuestions(data.questions, [], null);
+    document.getElementById('challenge-card').style.display = 'block';
+    document.getElementById('challenge-card').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function renderChallengeQuestions(questions, lockedAnswers, retryQuestion) {
+    const container = document.getElementById('challenge-questions');
+    container.innerHTML = '';
+
+    // Show locked correct answers
+    lockedAnswers.forEach((a, i) => {
+      const block = document.createElement('div');
+      block.className = 'question-block correct locked';
+      block.setAttribute('data-num', `Q${i + 1} ✓`);
+      block.innerHTML = `
+        <div class="field">
+          <label>${a.question}</label>
+          <input type="text" value="${a.answer}" disabled>
+        </div>
+        <div class="answer-status ok">✓ Correct</div>
+      `;
+      container.appendChild(block);
+    });
+
+    // Show active questions
+    questions.forEach((q, i) => {
+      const num = lockedAnswers.length + i + 1;
+      const block = document.createElement('div');
+      block.className = 'question-block';
+      block.setAttribute('data-num', `Q${num}`);
+      block.innerHTML = `
+        <div class="field" style="margin-bottom:0">
+          <label>${q.question}</label>
+          <input type="text" id="cq${i}" placeholder="your answer">
+        </div>
+      `;
+      container.appendChild(block);
+    });
+
+    // Show retry question
+    if (retryQuestion) {
+      const num = lockedAnswers.length + questions.length + 1;
+      const block = document.createElement('div');
+      block.className = 'question-block';
+      block.setAttribute('data-num', `Q${num} — Final Attempt`);
+      block.innerHTML = `
+        <div class="field" style="margin-bottom:0">
+          <label>${retryQuestion.question}</label>
+          <input type="text" id="cq_retry" placeholder="try again">
+        </div>
+      `;
+      container.appendChild(block);
+    }
+  }
+
+  async function doChallenge() {
+    const container = document.getElementById('challenge-questions');
+    const inputs = container.querySelectorAll('input[type=text]:not(:disabled)');
+
+    const newAnswers = [];
+    let allFilled = true;
+    inputs.forEach(input => {
+      if (!input.value.trim()) allFilled = false;
+      const label = input.closest('.question-block').querySelector('label');
+      newAnswers.push({ question: label.textContent, answer: input.value.trim() });
+    });
+
+    if (!allFilled) {
+      showChallengeAlert('Please answer all questions.', 'err');
+      return;
+    }
+
+    const allAnswers = [...currentAnswers, ...newAnswers];
+
+    const res = await fetch('/challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: currentUser,
+        answers: allAnswers,
+        escalation_level: currentEscalationLevel
+      })
+    });
+    const data = await res.json();
+
+    // Blocked
+    if (data.blocked) {
+      showChallengeAlert('Access denied — ' + data.message, 'err');
+      setTimeout(() => {
+        cancelChallenge();
+        showAlert('Access denied — failed verification.', 'err');
+      }, 2000);
+      return;
+    }
+
+    // Allowed
+    if (data.success) {
+      showChallengeAlert('✓ Identity verified.', 'ok');
+      setTimeout(() => showDashboard(currentUser), 700);
+      return;
+    }
+
+    // Escalate
+    if (data.escalate) {
+      currentEscalationLevel = data.escalation_level;
+      currentAnswers = data.previous_answers;
+      document.getElementById('challenge-status').textContent = `⚠ ${data.message}`;
+      showChallengeAlert('', '');
+      renderChallengeQuestions([data.new_question], data.previous_answers, null);
+      return;
+    }
+
+    // Retry
+    if (data.retry) {
+      currentAnswers = data.previous_answers;
+      currentEscalationLevel = 3;
+      document.getElementById('challenge-status').textContent = `⚠ ${data.message}`;
+      showChallengeAlert('One question was incorrect — one final attempt.', 'err');
+      renderChallengeQuestions([], data.previous_answers, data.retry_question);
+      return;
+    }
+  }
+
+  function showRisk(risk) {
+    if (!risk) return;
+    document.getElementById('risk-card').style.display = 'block';
+    const score = risk.score;
+    const numEl = document.getElementById('score-num');
+    numEl.textContent = score;
+    numEl.style.color = score >= 76 ? 'var(--danger)' : score >= 26 ? 'var(--warn)' : 'var(--ok)';
+
+    const dec = document.getElementById('decision-text');
+    const decLabels = {
+      allowed: 'ALLOWED',
+      challenged_1: 'VERIFY — 1 QUESTION',
+      challenged_2: 'VERIFY — 2 QUESTIONS',
+      challenged_3: 'VERIFY — 3 QUESTIONS',
+      blocked: 'BLOCKED'
+    };
+    dec.textContent = decLabels[risk.decision] || risk.decision.toUpperCase();
+    dec.className = 'decision-text ' + risk.decision;
+
+    const subs = {
+      allowed: 'low risk — access granted',
+      challenged_1: 'low-moderate risk — 1 question required',
+      challenged_2: 'moderate risk — 2 questions required',
+      challenged_3: 'high risk — all 3 questions required',
+      blocked: 'critical risk — access denied'
+    };
+    document.getElementById('decision-sub').textContent = subs[risk.decision] || '';
+    document.getElementById('factor-list').innerHTML = risk.factors.map(f => `
+      <div class="factor-row">
+        <div class="factor-name">factor</div>
+        <div class="factor-desc">${f}</div>
+      </div>
+    `).join('');
+  }
+
+  function cancelChallenge() {
+    document.getElementById('challenge-card').style.display = 'none';
+    document.getElementById('risk-card').style.display = 'none';
+    currentUser = null;
+    currentAnswers = [];
+    currentEscalationLevel = 1;
+  }
+
+  function showDashboard(username) {
+    document.getElementById('auth-card').style.display = 'none';
+    document.getElementById('challenge-card').style.display = 'none';
+    document.getElementById('dashboard-card').style.display = 'block';
+    document.getElementById('dash-username').textContent = username;
+  }
+
+  async function loadHistory() {
+    const res = await fetch('/history/' + currentUser);
+    const rows = await res.json();
+    document.getElementById('history-body').innerHTML = rows.map(r => {
+      const badgeClass = r.outcome.startsWith('challenged') ? 'challenged' : r.outcome;
+      return `
+        <tr>
+          <td>${r.timestamp}</td>
+          <td>${r.ip_address}</td>
+          <td style="color:${r.risk_score >= 76 ? 'var(--danger)' : r.risk_score >= 26 ? 'var(--warn)' : 'var(--ok)'}">${r.risk_score}</td>
+          <td><span class="badge ${badgeClass}">${r.outcome}</span></td>
+        </tr>
+      `;
+    }).join('');
+    document.getElementById('history-section').style.display = 'block';
+  }
+
+  function doLogout() {
+    currentUser = null;
+    currentAnswers = [];
+    currentEscalationLevel = 1;
+    document.getElementById('dashboard-card').style.display = 'none';
+    document.getElementById('risk-card').style.display = 'none';
+    document.getElementById('challenge-card').style.display = 'none';
+    document.getElementById('auth-card').style.display = 'block';
+    document.getElementById('alert').className = '';
+    document.getElementById('login-username').value = '';
+  }
+</script>
+</body>
+</html>
